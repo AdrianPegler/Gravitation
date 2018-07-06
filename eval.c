@@ -42,10 +42,10 @@ int current_level = 0;
     }
 
     void add(vector **vector_array, Cluster *c_recv, Cluster *c_add){
-        int activ = c_recv->activ;
+        int active = c_recv->active;
 
-        if(activ >= 0){
-            vector_add_once(vector_array[activ], c_add);
+        if(active >= 0){
+            vector_add_once(vector_array[active], c_add);
         }else{
             add(vector_array, c_recv->son[0], c_add);
             add(vector_array, c_recv->son[1], c_add);
@@ -147,16 +147,16 @@ int current_level = 0;
      * for later to exchange the data / respectivly fill in the received data. 
      * */
     void _prep_comm(Cluster *ct, Cluster *cs){
-        if(ct->activ != semi_activ && ct->activ != world.rank){
+        if(ct->active != semi_active && ct->active != world.rank){
             return;
         }
-        if(cs->activ == world.rank){
+        if(cs->active == world.rank){
             return;
         }
 
-        //In case of an admissable block with inactiv cs:
-        //1. This knot needs the information of the knot where cs is activ
-        //2. Because of symmetry this knot needs to send its own information to the knot where cs is activ
+        //In case of an admissable block with inactive cs:
+        //1. This knot needs the information of the knot where cs is active
+        //2. Because of symmetry this knot needs to send its own information to the knot where cs is active
         if(admissable(ct, cs)){
             add(recv_clusters, cs, cs);
             add(send_clusters, cs, ct);            
@@ -325,7 +325,7 @@ int current_level = 0;
             v = recv_clusters[i];
             for(j = 0; j < v->count; j++){
                 c = (Cluster*) v->data[j];
-                if(c->activ > -1){ 
+                if(c->active > -1){ 
                     //All data come from exactly one other knot. So a memcpy is sufficiant
                     memcpy(c->m, recv_sub_ms + offset, NUM_SUB_MASSES * sizeof(double));
                 } else {
@@ -353,7 +353,7 @@ int current_level = 0;
         }
     }
 
-    void _clear_inactiv_clusters(){
+    void _clear_inactive_clusters(){
         int i, j, k;
         Cluster *c;
         vector *v;
@@ -361,7 +361,7 @@ int current_level = 0;
             v = recv_clusters[i];
             for(j = 0; j < v->count; j++){
                 c = (Cluster*) v->data[j];
-                if(c->activ == inactiv){ 
+                if(c->active == inactive){ 
                     for(k = 0; k < NUM_SUB_MASSES; k++){
                         c->m[k] = 0.0;
                     }
@@ -414,8 +414,8 @@ int current_level = 0;
         double * m;
 
         bt = my_bs;
-        bs = cs->activ == world.rank?my_bs:NULL;
-        m  = cs->activ == world.rank?my_bs->m:recv_m;
+        bs = cs->active == world.rank?my_bs:NULL;
+        m  = cs->active == world.rank?my_bs->m:recv_m;
 
         for(i1 = 0; i1 < ct->n; i1++){
             for(j1 = 0; j1 < cs->n; j1++){
@@ -439,7 +439,7 @@ int current_level = 0;
     }
 
     void _eval(Cluster *ct, Cluster *cs){
-        if(ct->activ != semi_activ && ct->activ != world.rank){
+        if(ct->active != semi_active && ct->active != world.rank){
             return;
         }
 
@@ -549,10 +549,10 @@ int current_level = 0;
             }
         }
 
-        if(world.rank == c->son[0]->activ || -1 == c->son[0]->activ)
+        if(world.rank == c->son[0]->active || -1 == c->son[0]->active)
             backward(c->son[0]);
             
-        if(world.rank == c->son[1]->activ || -1 == c->son[1]->activ)
+        if(world.rank == c->son[1]->active || -1 == c->son[1]->active)
             backward(c->son[1]);
     }
 
@@ -561,7 +561,7 @@ int current_level = 0;
  ***********************************************************/
     void forward(Cluster *c){
         work_time_start = MPI_Wtime();
-        if(c->activ != semi_activ && c->activ != world.rank){
+        if(c->active != semi_active && c->active != world.rank){
             return;
         }
         if(c->num_sons){
@@ -593,13 +593,13 @@ int current_level = 0;
         work_time += MPI_Wtime() - work_time_start;
 
         prep_time_start = MPI_Wtime();
-            _clear_inactiv_clusters();
+            _clear_inactive_clusters();
         prep_time +=  MPI_Wtime() - prep_time_start;
     }
 
     void backward(Cluster *c){
         work_time_start = MPI_Wtime();
-        if(c->activ != semi_activ && c->activ != world.rank){
+        if(c->active != semi_active && c->active != world.rank){
             return;
         }
 
