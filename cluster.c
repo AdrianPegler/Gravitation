@@ -6,7 +6,7 @@
 int *send_count, *recv_count, *send_displ, *recv_displ;
 int new_n;
 void _setup(Cluster *c, int depth);
-Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double *b, int activ);
+Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double *b, int active);
 void deleteCluster(Cluster *c);
 
 /*********************************************************
@@ -149,34 +149,34 @@ void _setup_nonLeafCluster(Cluster *c, int depth){
     } 
 
     c->num_sons = 2;
-    c->son[0] = _new_bound_Cluster(c->start         , border       , c->bodies, c->a, b1  , c->activ);
+    c->son[0] = _new_bound_Cluster(c->start         , border       , c->bodies, c->a, b1  , c->active);
     _setup(c->son[0], depth+1);
-    c->son[1] = _new_bound_Cluster(c->start + border, c->n - border, c->bodies, a2  , c->b, c->activ);
+    c->son[1] = _new_bound_Cluster(c->start + border, c->n - border, c->bodies, a2  , c->b, c->active);
     _setup(c->son[1], depth+1);
 }
 
 void _setup(Cluster *c, int depth){
     if(depth == SPLIT_DEPTH){
-        c->activ = ++split_count;
-        if(world.rank == split_count){
-            activ_sub_tree = c;
-        }
+        c->active = ++split_count;
+        // if(world.rank == split_count){
+        //     active_sub_tree = c;
+        // }
     }
     if(depth < MAX_DEPTH){
         _setup_nonLeafCluster(c, depth);
     }
 
-    //till now all clusters are either semiactive by default
-    //or activ for exactly one knot. Now all Clusters
-    //that are neither really semiactiv nor activ for this
-    //knot will be set to inactiv.
-    if(c->activ == semi_activ){
-        if(c->son[0]->activ == inactiv && c->son[1]->activ == inactiv){
-            c->activ = inactiv;
+    //till now all clusters are either semiactivee by default
+    //or active for exactly one knot. Now all Clusters
+    //that are neither really semiactive nor active for this
+    //knot will be set to inactive.
+    if(c->active == semi_active){
+        if(c->son[0]->active == inactive && c->son[1]->active == inactive){
+            c->active = inactive;
         } else{
-            if(c->son[0]->activ != world.rank && c->son[0]->activ != semi_activ &&
-               c->son[1]->activ != world.rank && c->son[1]->activ != semi_activ) {
-                   c->activ = inactiv;
+            if(c->son[0]->active != world.rank && c->son[0]->active != semi_active &&
+               c->son[1]->active != world.rank && c->son[1]->active != semi_active) {
+                   c->active = inactive;
             }
         }
     }
@@ -184,15 +184,15 @@ void _setup(Cluster *c, int depth){
 
 void preSort(Cluster *c, int depth){
     if(depth == SPLIT_DEPTH){
-        c->activ = ++split_count;
+        c->active = ++split_count;
     
         //get count and start index of data to send to process #split_count
         send_count[split_count] = c->n;
         send_displ[split_count] = split_count == 0 ? 0 : send_displ[split_count - 1] + send_count[split_count - 1];
     
-        //if the current knot is the activ one: gather counts and displs from the other knots:
+        //if the current knot is the active one: gather counts and displs from the other knots:
         MPI_Gather(&send_count[split_count], 1, MPI_INT, recv_count, 1, MPI_INT, split_count, MPI_COMM_WORLD);
-        if(world.rank == c->activ){
+        if(world.rank == c->active){
             new_n = 0;
             for(int i = 0; i < world.size; i++){
                 recv_displ[i] = new_n;
@@ -215,9 +215,9 @@ void preSort(Cluster *c, int depth){
         } 
 
         c->num_sons = 2;
-        c->son[0] = _new_bound_Cluster(c->start         , border       , c->bodies, c->a, b1  , c->activ);
+        c->son[0] = _new_bound_Cluster(c->start         , border       , c->bodies, c->a, b1  , c->active);
         preSort(c->son[0], depth+1);
-        c->son[1] = _new_bound_Cluster(c->start + border, c->n - border, c->bodies, a2  , c->b, c->activ);
+        c->son[1] = _new_bound_Cluster(c->start + border, c->n - border, c->bodies, a2  , c->b, c->active);
         preSort(c->son[1], depth+1);
     }
 }
@@ -234,7 +234,7 @@ Cluster *constructClusterTree(bodies *b){
     //get smallest root bounding box
     get_bounding_box(b, min, max);
 
-    Cluster *root = _new_bound_Cluster(0, n, b, min, max, semi_activ);
+    Cluster *root = _new_bound_Cluster(0, n, b, min, max, semi_active);
 
     if(world.size > 1){
         ////////////////////////////////////////////////////////
@@ -266,8 +266,8 @@ Cluster *constructClusterTree(bodies *b){
         INST = 1;
     } else {
         split_count = -1;
-        root->activ = 0;
-        activ_sub_tree = root;
+        root->active = 0;
+        // active_sub_tree = root;
     }
 
     ////////////////////////////////////////////////////////
@@ -283,7 +283,7 @@ Cluster *constructClusterTree(bodies *b){
     return root;
 }
 
-Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double *b, int activ){
+Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double *b, int active){
     int i,j;
     Cluster *c;
     c     = (Cluster*) _mm_malloc(                          sizeof(Cluster), 64);
@@ -296,7 +296,7 @@ Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double 
     //init values
     c->bodies = bodies;
     c->id = INST++;
-    c->activ = activ;
+    c->active = active;
     c->start = start;
     c->n = n;
     c->num_sons = 0;

@@ -13,12 +13,12 @@
 #include <float.h>
 #include <math.h>
 
-#define semi_activ -1
-#define inactiv -2
+#define semi_active -1
+#define inactive -2
 
 typedef struct _Cluster Cluster;
 
-Cluster *activ_sub_tree;
+//Cluster *active_sub_tree;
 
 double* ref_points;
 
@@ -32,7 +32,7 @@ int split_count;
 struct _Cluster{
     bodies *bodies;             //related bodies
     int id;                     //id of the Cluster
-    int activ;                  //number of the process that's responsible 
+    int active;                  //number of the process that's responsible 
     int start;                  //index of first bodie that resides inside the Cluster
     int n;                      //number of bodies in this Cluster
     double a[3];                //"upper left" corner of the bounding box
