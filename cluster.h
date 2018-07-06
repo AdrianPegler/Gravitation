@@ -18,7 +18,7 @@
 
 typedef struct _Cluster Cluster;
 
-Cluster *activ_sub_tree;
+//Cluster *activ_sub_tree;
 
 double* ref_points;
 

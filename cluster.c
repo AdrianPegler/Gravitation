@@ -158,9 +158,9 @@ void _setup_nonLeafCluster(Cluster *c, int depth){
 void _setup(Cluster *c, int depth){
     if(depth == SPLIT_DEPTH){
         c->activ = ++split_count;
-        if(world.rank == split_count){
-            activ_sub_tree = c;
-        }
+        // if(world.rank == split_count){
+        //     activ_sub_tree = c;
+        // }
     }
     if(depth < MAX_DEPTH){
         _setup_nonLeafCluster(c, depth);
@@ -267,7 +267,7 @@ Cluster *constructClusterTree(bodies *b){
     } else {
         split_count = -1;
         root->activ = 0;
-        activ_sub_tree = root;
+        // activ_sub_tree = root;
     }
 
     ////////////////////////////////////////////////////////
