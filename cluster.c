@@ -252,15 +252,15 @@ Cluster *constructClusterTree(bodies *b){
         alltoall_bodies(my_bs, send_count, send_displ, new_bs, recv_count, recv_displ);
         del_bodies(my_bs);
         my_bs = new_bs;
+        //reset roots bodies*
+        root->bodies = my_bs;
+        root->n      = my_bs->n;
 
         ////////////////////////////////////////////////////////
         // clean preSort
         //delete all but the root of the Cluster tree
         deleteCluster(root->son[0]);
         deleteCluster(root->son[1]);
-        //reset roots bodies*
-        root->bodies = my_bs;
-        root->n      = my_bs->n;
         //reset counter
         split_count = -1;
         INST = 1;
