@@ -1,6 +1,6 @@
 
 CC = mpicc
-CFLAGS = -g -Wall -Wextra -O3 -march=native -fopenmp
+CFLAGS = -g -Wall -Wextra -O1 -march=native -fopenmp
 
 LD = gcc
 LDFLAGS = -lm#-fopenmp 

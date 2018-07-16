@@ -158,9 +158,6 @@ void _setup_nonLeafCluster(Cluster *c, int depth){
 void _setup(Cluster *c, int depth){
     if(depth == SPLIT_DEPTH){
         c->active = ++split_count;
-        // if(world.rank == split_count){
-        //     active_sub_tree = c;
-        // }
     }
     if(depth < MAX_DEPTH){
         _setup_nonLeafCluster(c, depth);
@@ -287,9 +284,15 @@ Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double 
     int i,j;
     Cluster *c;
     c     = (Cluster*) _mm_malloc(                          sizeof(Cluster), 64);
-    c->m  = (double*)  _mm_malloc(NUM_SUB_MASSES           * sizeof(double), 64);
-    c->F  = (double*)  _mm_malloc(NUM_SUB_MASSES       * 3 * sizeof(double), 64);
-    c->xs = (double*)  _mm_malloc(INTERPOLATION_POINTS * 3 * sizeof(double), 64);
+    if(active == world.rank || active == semi_active){   
+        c->m  = (double*)  _mm_malloc(NUM_SUB_MASSES           * sizeof(double), 64);
+        c->F  = (double*)  _mm_malloc(NUM_SUB_MASSES       * 3 * sizeof(double), 64);
+        c->xs = (double*)  _mm_malloc(INTERPOLATION_POINTS * 3 * sizeof(double), 64);
+    }else{
+        c->m = NULL;
+        c->F = NULL;
+        c->xs = NULL;
+    }
     //c->count = (int*)  _mm_malloc(world.size               * sizeof(int)   , 64);
     //c->displ = (int*)  _mm_malloc(world.size               * sizeof(int)   , 64);
 
@@ -304,12 +307,12 @@ Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double 
         c->a[i] = a[i];
         c->b[i] = b[i];
     }
-    for(i = 0; i < NUM_SUB_MASSES; i++){
+    /*for(i = 0; i < NUM_SUB_MASSES; i++){
         c->m[i] = 0.0;
         c->F[i * 3 + 0] = 0.0;
         c->F[i * 3 + 1] = 0.0;
         c->F[i * 3 + 2] = 0.0;
-    }
+    }*/
 
     //calculate diameter and centerpoint(s)
     double diam, dist;
@@ -317,8 +320,10 @@ Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double 
     for(i = 0; i < 3; i++){
         c->center[i] = (c->a[i] + c->b[i]) /2.0;
         dist = _dist_ab(c->a[i], c->b[i]);
-        for(j = 0; j < INTERPOLATION_POINTS; j++){
-            c->xs[i * INTERPOLATION_POINTS + j] = c->center[i] + dist / 2 * ref_points[j];
+        if(active == world.rank || active == semi_active){
+            for(j = 0; j < INTERPOLATION_POINTS; j++){
+                c->xs[i * INTERPOLATION_POINTS + j] = c->center[i] + dist / 2 * ref_points[j];
+            }
         }
         dist *= dist;
         diam += dist;
@@ -336,9 +341,9 @@ void deleteCluster(Cluster *c){
         deleteCluster(c->son[0]);
         deleteCluster(c->son[1]);
     }
-    _mm_free(c->m);
-    _mm_free(c->F);
-    _mm_free(c->xs);
+    if(c->m != NULL){_mm_free(c->m);}
+    if(c->F != NULL){_mm_free(c->F);}
+    if(c->xs != NULL){_mm_free(c->xs);}
     //_mm_free(c->count);
     //_mm_free(c->displ);
     _mm_free(c);

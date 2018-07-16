@@ -208,6 +208,13 @@ int current_level = 0;
             sum += send_sub_ms_count[i];
         }
         send_sub_ms = realloc(send_sub_ms, sum * sizeof(double));
+        // printf("\tid: %d \t send_sub_ms: %lu Bytes\n", world.rank, sum * sizeof(double));
+        // sleep(1);
+        // MPI_Barrier(MPI_COMM_WORLD);
+        // sleep(1);
+        // fflush(stdout);
+        // MPI_Barrier(MPI_COMM_WORLD);
+        // world.rank?:printf("\n\n");
         sum = 0;
         for(i = 0; i < world.size; i++){
             v = recv_clusters[i];
@@ -216,6 +223,13 @@ int current_level = 0;
             sum += recv_sub_ms_count[i];
         }
         recv_sub_ms = realloc(recv_sub_ms, sum * sizeof(double));
+        // printf("\tid: %d \t recv_sub_ms: %lu Bytes\n", world.rank, sum * sizeof(double));
+        // sleep(1);
+        // MPI_Barrier(MPI_COMM_WORLD);
+        // sleep(1);
+        // fflush(stdout);
+        // MPI_Barrier(MPI_COMM_WORLD);
+        // world.rank?:printf("\n\n");
 
         //actually copy substitution masses to send buffer
         offset = 0;
@@ -251,6 +265,14 @@ int current_level = 0;
         send_z = realloc(send_z, sum * sizeof(double));
         send_m = realloc(send_m, sum * sizeof(double));
         send_n = realloc(send_n, n_sum * sizeof(int));
+        // printf("\tid: %d \t send_suns: %lu Bytes\n", world.rank, 4 * sum * sizeof(double) + n_sum * sizeof(int));
+        // sleep(1);
+        // MPI_Barrier(MPI_COMM_WORLD);
+        // sleep(1);
+        // fflush(stdout);
+        // MPI_Barrier(MPI_COMM_WORLD);
+        // world.rank?:printf("\n\n");
+
         // Only send counts can be generated locally, so this also needs to be exchanged
         MPI_Alltoall(send_bs_count, 1, MPI_INT, recv_bs_count, 1, MPI_INT, MPI_COMM_WORLD);
         MPI_Alltoall(send_n_count, 1, MPI_INT, recv_n_count, 1, MPI_INT, MPI_COMM_WORLD);
@@ -268,6 +290,15 @@ int current_level = 0;
         recv_z = realloc(recv_z, sum * sizeof(double));
         recv_m = realloc(recv_m, sum * sizeof(double));
         recv_n = realloc(recv_n, n_sum * sizeof(int));
+        // printf("\tid: %d \t recv_suns: %lu Bytes\n", world.rank, 4 * sum * sizeof(double) + n_sum * sizeof(int));
+        // sleep(1);
+        // MPI_Barrier(MPI_COMM_WORLD);
+        // sleep(1);
+        // fflush(stdout);
+        // MPI_Barrier(MPI_COMM_WORLD);
+        // world.rank?:printf("\n\n");
+
+        // //exit(-1);
 
         //actually get the needed bodies data
         n_sum = 0;
@@ -324,7 +355,16 @@ int current_level = 0;
         for(i = 0; i < world.size; i++){
             v = recv_clusters[i];
             for(j = 0; j < v->count; j++){
+                int i1, j1;
                 c = (Cluster*) v->data[j];
+                c->m  = (double*)  _mm_malloc(NUM_SUB_MASSES           * sizeof(double), 64);
+                c->xs = (double*)  _mm_malloc(INTERPOLATION_POINTS * 3 * sizeof(double), 64);
+                for(i1 = 0; i1 < 3; i1++){
+                    double dist = _dist_ab(c->a[i1], c->b[i1]);
+                    for(j1 = 0; j1 < INTERPOLATION_POINTS; j1++){
+                        c->xs[i1 * INTERPOLATION_POINTS + j1] = c->center[i1] + dist / 2 * ref_points[j1];
+                    }
+                }
                 if(c->active > -1){ 
                     //All data come from exactly one other knot. So a memcpy is sufficiant
                     memcpy(c->m, recv_sub_ms + offset, NUM_SUB_MASSES * sizeof(double));
