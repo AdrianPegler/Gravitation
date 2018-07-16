@@ -288,6 +288,12 @@ Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double 
         c->m  = (double*)  _mm_malloc(NUM_SUB_MASSES           * sizeof(double), 64);
         c->F  = (double*)  _mm_malloc(NUM_SUB_MASSES       * 3 * sizeof(double), 64);
         c->xs = (double*)  _mm_malloc(INTERPOLATION_POINTS * 3 * sizeof(double), 64);
+        for(i = 0; i < NUM_SUB_MASSES; i++){
+            c->m[i] = 0.0;
+            c->F[i * 3 + 0] = 0.0;
+            c->F[i * 3 + 1] = 0.0;
+            c->F[i * 3 + 2] = 0.0;
+        }
     }else{
         c->m = NULL;
         c->F = NULL;
@@ -307,12 +313,6 @@ Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double 
         c->a[i] = a[i];
         c->b[i] = b[i];
     }
-    /*for(i = 0; i < NUM_SUB_MASSES; i++){
-        c->m[i] = 0.0;
-        c->F[i * 3 + 0] = 0.0;
-        c->F[i * 3 + 1] = 0.0;
-        c->F[i * 3 + 2] = 0.0;
-    }*/
 
     //calculate diameter and centerpoint(s)
     double diam, dist;
