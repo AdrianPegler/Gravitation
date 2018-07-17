@@ -37,3 +37,24 @@ void ap_free(void *ptr, size_t size){
     bytes_alloced -= size;
     _mm_free(ptr);
 }
+
+
+void *ap_nmalloc(size_t size){
+    bytes_alloced += size;
+    max_alloced = bytes_alloced>max_alloced?bytes_alloced:max_alloced;
+    return malloc(size);
+}
+void *ap_realloc(void *ptr, size_t size){
+    bytes_alloced += size;
+    max_alloced = bytes_alloced>max_alloced?bytes_alloced:max_alloced;
+    return realloc(ptr, size);
+}
+void *ap_calloc(size_t nmem, size_t size){
+    bytes_alloced += size;
+    max_alloced = bytes_alloced>max_alloced?bytes_alloced:max_alloced;
+    return calloc(nmem, size);
+}
+void ap_nfree(void *ptr, size_t size){
+    bytes_alloced -= size;
+    free(ptr);
+}
