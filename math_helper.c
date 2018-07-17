@@ -44,8 +44,8 @@ void *ap_nmalloc(size_t size){
     max_alloced = bytes_alloced>max_alloced?bytes_alloced:max_alloced;
     return malloc(size);
 }
-void *ap_realloc(void *ptr, size_t size){
-    bytes_alloced += size;
+void *ap_realloc(void *ptr, size_t size, size_t oldsize){
+    bytes_alloced += size - oldsize;
     max_alloced = bytes_alloced>max_alloced?bytes_alloced:max_alloced;
     return realloc(ptr, size);
 }
