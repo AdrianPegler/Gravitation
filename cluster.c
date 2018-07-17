@@ -237,10 +237,10 @@ Cluster *constructClusterTree(bodies *b){
         ////////////////////////////////////////////////////////
         // Initializations:
         split_count = -1;
-        send_count = _mm_malloc(world.size * sizeof(int), 64);
-        recv_count = _mm_malloc(world.size * sizeof(int), 64);
-        send_displ = _mm_malloc(world.size * sizeof(int), 64);
-        recv_displ = _mm_malloc(world.size * sizeof(int), 64);
+        send_count = ap_malloc(world.size * sizeof(int), 64);
+        recv_count = ap_malloc(world.size * sizeof(int), 64);
+        send_displ = ap_malloc(world.size * sizeof(int), 64);
+        recv_displ = ap_malloc(world.size * sizeof(int), 64);
 
         ////////////////////////////////////////////////////////
         // Sort the bodies; first locally, then globally.
@@ -273,21 +273,21 @@ Cluster *constructClusterTree(bodies *b){
     
     ////////////////////////////////////////////////////////
     // clean up:
-    _mm_free(send_count);
-    _mm_free(recv_count);
-    _mm_free(send_displ);
-    _mm_free(recv_displ);
+    ap_free(send_count, world.size * sizeof(int));
+    ap_free(recv_count, world.size * sizeof(int));
+    ap_free(send_displ, world.size * sizeof(int));
+    ap_free(recv_displ, world.size * sizeof(int));
     return root;
 }
 
 Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double *b, int active){
     int i,j;
     Cluster *c;
-    c     = (Cluster*) _mm_malloc(                          sizeof(Cluster), 64);
+    c     = (Cluster*) ap_malloc(sizeof(Cluster), 64);
     if(active == world.rank || active == semi_active){   
-        c->m  = (double*)  _mm_malloc(NUM_SUB_MASSES           * sizeof(double), 64);
-        c->F  = (double*)  _mm_malloc(NUM_SUB_MASSES       * 3 * sizeof(double), 64);
-        c->xs = (double*)  _mm_malloc(INTERPOLATION_POINTS * 3 * sizeof(double), 64);
+        c->m  = (double*)  ap_malloc(NUM_SUB_MASSES           * sizeof(double), 64);
+        c->F  = (double*)  ap_malloc(NUM_SUB_MASSES       * 3 * sizeof(double), 64);
+        c->xs = (double*)  ap_malloc(INTERPOLATION_POINTS * 3 * sizeof(double), 64);
         for(i = 0; i < NUM_SUB_MASSES; i++){
             c->m[i] = 0.0;
             c->F[i * 3 + 0] = 0.0;
@@ -299,8 +299,8 @@ Cluster *_new_bound_Cluster(int start, int n, bodies *bodies, double *a, double 
         c->F = NULL;
         c->xs = NULL;
     }
-    //c->count = (int*)  _mm_malloc(world.size               * sizeof(int)   , 64);
-    //c->displ = (int*)  _mm_malloc(world.size               * sizeof(int)   , 64);
+    //c->count = (int*)  ap_malloc(world.size               * sizeof(int)   , 64);
+    //c->displ = (int*)  ap_malloc(world.size               * sizeof(int)   , 64);
 
     //init values
     c->bodies = bodies;
@@ -341,12 +341,12 @@ void deleteCluster(Cluster *c){
         deleteCluster(c->son[0]);
         deleteCluster(c->son[1]);
     }
-    if(c->m != NULL){_mm_free(c->m);}
-    if(c->F != NULL){_mm_free(c->F);}
-    if(c->xs != NULL){_mm_free(c->xs);}
-    //_mm_free(c->count);
-    //_mm_free(c->displ);
-    _mm_free(c);
+    if(c->m != NULL){ap_free(c->m,   NUM_SUB_MASSES           * sizeof(double));}
+    if(c->F != NULL){ap_free(c->F,   NUM_SUB_MASSES       * 3 * sizeof(double));}
+    if(c->xs != NULL){ap_free(c->xs, INTERPOLATION_POINTS * 3 * sizeof(double));}
+    //ap_free(c->count);
+    //ap_free(c->displ);
+    ap_free(c, sizeof(Cluster));
 }
 
 /*********************************************************

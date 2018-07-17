@@ -10,6 +10,7 @@
 #include "cluster.h"
 #include "stopwatch.h"
 #include "eval.h"
+#include "math_helper.h"
 
 #include <stdlib.h>
 #include <stdio.h>

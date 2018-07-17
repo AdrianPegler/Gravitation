@@ -8,6 +8,7 @@
 #include "vector.h"
 #include "bodies.h"
 #include "stopwatch.h"
+#include "math_helper.h"
 
 vector **send_clusters, **recv_clusters, **send_bodies, **recv_bodies;
 double *send_sub_ms, *recv_sub_ms;

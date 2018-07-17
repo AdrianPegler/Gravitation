@@ -3,6 +3,9 @@
 double ETA = 1.0;
 int first_admissable = 1000;
 int current_level = 0;
+int old_sum = 0;
+int old_sub_sum = 0;
+int old_n_sum = 0;
 
 
 /************************************************************
@@ -207,7 +210,7 @@ int current_level = 0;
             send_sub_ms_count[i] = v->count * NUM_SUB_MASSES;
             sum += send_sub_ms_count[i];
         }
-        send_sub_ms = realloc(send_sub_ms, sum * sizeof(double));
+        send_sub_ms = ap_realloc(send_sub_ms, sum * sizeof(double), old_sub_sum * sizeof(double));
         // printf("\tid: %d \t send_sub_ms: %lu Bytes\n", world.rank, sum * sizeof(double));
         // sleep(1);
         // MPI_Barrier(MPI_COMM_WORLD);
@@ -222,7 +225,8 @@ int current_level = 0;
             recv_sub_ms_count[i] = v->count * NUM_SUB_MASSES;
             sum += recv_sub_ms_count[i];
         }
-        recv_sub_ms = realloc(recv_sub_ms, sum * sizeof(double));
+        recv_sub_ms = ap_realloc(recv_sub_ms, sum * sizeof(double), old_sub_sum * sizeof(double));
+        old_sub_sum = sum;
         // printf("\tid: %d \t recv_sub_ms: %lu Bytes\n", world.rank, sum * sizeof(double));
         // sleep(1);
         // MPI_Barrier(MPI_COMM_WORLD);
@@ -260,11 +264,11 @@ int current_level = 0;
             send_n_displ[i] = n_sum;
             n_sum += v->count;
         }
-        send_x = realloc(send_x, sum * sizeof(double));
-        send_y = realloc(send_y, sum * sizeof(double));
-        send_z = realloc(send_z, sum * sizeof(double));
-        send_m = realloc(send_m, sum * sizeof(double));
-        send_n = realloc(send_n, n_sum * sizeof(int));
+        send_x = ap_realloc(send_x, sum * sizeof(double), old_sum * sizeof(double));
+        send_y = ap_realloc(send_y, sum * sizeof(double), old_sum * sizeof(double));
+        send_z = ap_realloc(send_z, sum * sizeof(double), old_sum * sizeof(double));
+        send_m = ap_realloc(send_m, sum * sizeof(double), old_sum * sizeof(double));
+        send_n = ap_realloc(send_n, n_sum * sizeof(int), old_n_sum * sizeof(int));
         // printf("\tid: %d \t send_suns: %lu Bytes\n", world.rank, 4 * sum * sizeof(double) + n_sum * sizeof(int));
         // sleep(1);
         // MPI_Barrier(MPI_COMM_WORLD);
@@ -285,11 +289,13 @@ int current_level = 0;
             recv_n_displ[i] = n_sum;
             n_sum += recv_n_count[i];
         }
-        recv_x = realloc(recv_x, sum * sizeof(double));
-        recv_y = realloc(recv_y, sum * sizeof(double));
-        recv_z = realloc(recv_z, sum * sizeof(double));
-        recv_m = realloc(recv_m, sum * sizeof(double));
-        recv_n = realloc(recv_n, n_sum * sizeof(int));
+        recv_x = ap_realloc(recv_x, sum * sizeof(double), old_sum * sizeof(double));
+        recv_y = ap_realloc(recv_y, sum * sizeof(double), old_sum * sizeof(double));
+        recv_z = ap_realloc(recv_z, sum * sizeof(double), old_sum * sizeof(double));
+        recv_m = ap_realloc(recv_m, sum * sizeof(double), old_sum * sizeof(double));
+        recv_n = ap_realloc(recv_n, n_sum * sizeof(int), old_n_sum * sizeof(int));
+        old_sum = sum;
+        old_n_sum = n_sum;
         // printf("\tid: %d \t recv_suns: %lu Bytes\n", world.rank, 4 * sum * sizeof(double) + n_sum * sizeof(int));
         // sleep(1);
         // MPI_Barrier(MPI_COMM_WORLD);
@@ -357,8 +363,8 @@ int current_level = 0;
             for(j = 0; j < v->count; j++){
                 int i1, j1;
                 c = (Cluster*) v->data[j];
-                c->m  = (double*)  _mm_malloc(NUM_SUB_MASSES           * sizeof(double), 64);
-                c->xs = (double*)  _mm_malloc(INTERPOLATION_POINTS * 3 * sizeof(double), 64);
+                c->m  = (double*)  ap_malloc(NUM_SUB_MASSES           * sizeof(double), 64);
+                c->xs = (double*)  ap_malloc(INTERPOLATION_POINTS * 3 * sizeof(double), 64);
                 for(i1 = 0; i1 < 3; i1++){
                     double dist = _dist_ab(c->a[i1], c->b[i1]);
                     for(j1 = 0; j1 < INTERPOLATION_POINTS; j1++){
@@ -656,30 +662,30 @@ int current_level = 0;
  ***********************************************************/
     void init_eval(){
         int i;
-        send_sub_ms_count = calloc(world.size, sizeof(int));
-        send_sub_ms_displ = calloc(world.size, sizeof(int));
-        recv_sub_ms_count = calloc(world.size, sizeof(int));
-        recv_sub_ms_displ = calloc(world.size, sizeof(int));
+        send_sub_ms_count = ap_calloc(world.size, sizeof(int));
+        send_sub_ms_displ = ap_calloc(world.size, sizeof(int));
+        recv_sub_ms_count = ap_calloc(world.size, sizeof(int));
+        recv_sub_ms_displ = ap_calloc(world.size, sizeof(int));
 
-        send_bs_count = calloc(world.size, sizeof(int));
-        send_bs_displ = calloc(world.size, sizeof(int));
-        recv_bs_count = calloc(world.size, sizeof(int));
-        recv_bs_displ = calloc(world.size, sizeof(int));
+        send_bs_count = ap_calloc(world.size, sizeof(int));
+        send_bs_displ = ap_calloc(world.size, sizeof(int));
+        recv_bs_count = ap_calloc(world.size, sizeof(int));
+        recv_bs_displ = ap_calloc(world.size, sizeof(int));
 
-        send_n_count = calloc(world.size, sizeof(int));
-        send_n_displ = calloc(world.size, sizeof(int));
-        recv_n_count = calloc(world.size, sizeof(int));
-        recv_n_displ = calloc(world.size, sizeof(int));
+        send_n_count = ap_calloc(world.size, sizeof(int));
+        send_n_displ = ap_calloc(world.size, sizeof(int));
+        recv_n_count = ap_calloc(world.size, sizeof(int));
+        recv_n_displ = ap_calloc(world.size, sizeof(int));
 
-        send_clusters = malloc(world.size * sizeof(vector*));
-        recv_clusters = malloc(world.size * sizeof(vector*));
-        send_bodies   = malloc(world.size * sizeof(vector*));
-        recv_bodies   = malloc(world.size * sizeof(vector*));
+        send_clusters =ap_nmalloc(world.size * sizeof(vector*));
+        recv_clusters =ap_nmalloc(world.size * sizeof(vector*));
+        send_bodies   =ap_nmalloc(world.size * sizeof(vector*));
+        recv_bodies   =ap_nmalloc(world.size * sizeof(vector*));
         for(i = 0; i < world.size; i++){
-            send_clusters[i] = malloc(sizeof(vector));
-            recv_clusters[i] = malloc(sizeof(vector));
-            send_bodies[i]   = malloc(sizeof(vector));
-            recv_bodies[i]   = malloc(sizeof(vector));
+            send_clusters[i] =ap_nmalloc(sizeof(vector));
+            recv_clusters[i] =ap_nmalloc(sizeof(vector));
+            send_bodies[i]   =ap_nmalloc(sizeof(vector));
+            recv_bodies[i]   =ap_nmalloc(sizeof(vector));
             vector_init(send_clusters[i]);
             vector_init(recv_clusters[i]);
             vector_init(send_bodies[i]);
@@ -706,45 +712,69 @@ int current_level = 0;
     }
 
     void finalize_eval(){
-        int i;
+        int i, j, sum_sub, sum_bod, n_sum, knot_n;
+
+        sum_sub = 0;
+        for(i = 0; i < world.size; i++){
+            sum_sub += send_sub_ms_count[i];
+        }
+
+        sum_bod = 0;
+        n_sum   = 0;
+        vector *v;
+        Cluster *c;
+        for(i = 0; i < world.size; i++){
+            v = send_bodies[i];
+            knot_n = 0;
+            for(j = 0; j < v->count; j++){
+                c = (Cluster*) v->data[j];
+                knot_n += c->n;
+            }
+            sum_bod += knot_n;
+
+            n_sum += v->count;
+        }
+
         for(i = 0; i < world.size; i++){
             vector_free(send_clusters[i]);
             vector_free(recv_clusters[i]);
             vector_free(send_bodies[i]);
             vector_free(recv_bodies[i]);
-            free(send_clusters[i]);
-            free(recv_clusters[i]);
-            free(send_bodies[i]  );
-            free(recv_bodies[i]  );
+           ap_nfree(send_clusters[i], sizeof(vector));
+           ap_nfree(recv_clusters[i], sizeof(vector));
+           ap_nfree(send_bodies[i]  , sizeof(vector));
+           ap_nfree(recv_bodies[i]  , sizeof(vector));
         }
-        free(send_clusters);
-        free(recv_clusters);
-        free(send_bodies  );
-        free(recv_bodies  );
+       ap_nfree(send_clusters, sizeof(vector*));
+       ap_nfree(recv_clusters, sizeof(vector*));
+       ap_nfree(send_bodies  , sizeof(vector*));
+       ap_nfree(recv_bodies  , sizeof(vector*));
 
-        free(send_sub_ms_count);
-        free(send_sub_ms_displ);
-        free(recv_sub_ms_count);
-        free(recv_sub_ms_displ);
+       ap_nfree(send_sub_ms_count, world.size * sizeof(int));
+       ap_nfree(send_sub_ms_displ, world.size * sizeof(int));
+       ap_nfree(recv_sub_ms_count, world.size * sizeof(int));
+       ap_nfree(recv_sub_ms_displ, world.size * sizeof(int));
 
-        free(send_bs_count);
-        free(send_bs_displ);
-        free(recv_bs_count);
-        free(recv_bs_displ);
+       ap_nfree(send_bs_count, world.size * sizeof(int));
+       ap_nfree(send_bs_displ, world.size * sizeof(int));
+       ap_nfree(recv_bs_count, world.size * sizeof(int));
+       ap_nfree(recv_bs_displ, world.size * sizeof(int));
 
-        free(send_n_count);
-        free(send_n_displ);
-        free(recv_n_count);
-        free(recv_n_displ);
+       ap_nfree(send_n_count, world.size * sizeof(int));
+       ap_nfree(send_n_displ, world.size * sizeof(int));
+       ap_nfree(recv_n_count, world.size * sizeof(int));
+       ap_nfree(recv_n_displ, world.size * sizeof(int));
         
-        free(send_sub_ms);
-        free(recv_sub_ms);
-        free(send_x);
-        free(send_y);
-        free(send_z);
-        free(send_m);
-        free(recv_x);
-        free(recv_y);
-        free(recv_z);
-        free(recv_m);
+       ap_nfree(send_sub_ms, sum_sub * sizeof(double));
+       ap_nfree(recv_sub_ms, sum_sub * sizeof(double));
+       ap_nfree(send_x, sum_bod * sizeof(double));
+       ap_nfree(send_y, sum_bod * sizeof(double));
+       ap_nfree(send_z, sum_bod * sizeof(double));
+       ap_nfree(send_m, sum_bod * sizeof(double));
+       ap_nfree(send_n, n_sum * sizeof(int));
+       ap_nfree(recv_x, sum_bod * sizeof(double));
+       ap_nfree(recv_y, sum_bod * sizeof(double));
+       ap_nfree(recv_z, sum_bod * sizeof(double));
+       ap_nfree(recv_m, sum_bod * sizeof(double));
+       ap_nfree(recv_n, n_sum * sizeof(int));
     }
