@@ -180,13 +180,6 @@ int main(int argc, String *argv){
 
   get_random_bodies(my_bs);
 
-  // total_time_start = MPI_Wtime();
-  c = constructClusterTree(my_bs);
-
-  work_times = ap_nmalloc(world.size * sizeof(double));
-  prep_times = ap_nmalloc(world.size * sizeof(double));
-  comm_times = ap_nmalloc(world.size * sizeof(double));
-
   // char *local_save = setlocale(LC_ALL, NULL);
   // char *local      = 
   setlocale(LC_ALL, "de_DE.UTF-8");
@@ -194,7 +187,19 @@ int main(int argc, String *argv){
   //printf("old_local:%s \t new_local: %s\n\n", local_save, local);
 
   world.rank?:printf("Run with %d processes and 2^%d elements per node\r\n", world.size, pot);
-  world.rank?:printf("step;total_time;work_time_min;work_time_avg;work_time_max;prep_time_min;prep_time_avg;prep_time_max;comm_time_min;comm_time_avg;comm_time_max\r\n");
+
+  // total_time_start = MPI_Wtime();
+  size_t memory = mem();
+  world.rank?:printf("memory befor cluster tree: %lu bytes\r\n", memory);
+  c = constructClusterTree(my_bs);
+  world.rank?:printf("memory after cluster tree: %lu bytes\r\n", mem());
+  world.rank?:printf("  differenze: \t %lu bytes\r\n", mem() - memory);
+
+  work_times = ap_nmalloc(world.size * sizeof(double));
+  prep_times = ap_nmalloc(world.size * sizeof(double));
+  comm_times = ap_nmalloc(world.size * sizeof(double));
+
+  world.rank?:printf("step;total_time;work_time_min;work_time_avg;work_time_max;prep_time_min;prep_time_avg;prep_time_max;comm_time_min;comm_time_avg;comm_time_max;max_alloced\r\n");
 
   for(i = 1; i <= steps; i++){
     //world.rank?:printf("step %i / %i: ...\r", i, steps);
@@ -242,9 +247,10 @@ int main(int argc, String *argv){
       // world.rank?:printf("\t work_time: %.3g \t %.3g\t\t %.3g \n", min_work_time, avg_work_time, max_work_time);
       // world.rank?:printf("\t prep_time: %.3g \t %.3g \t %.3g \n", min_prep_time, avg_prep_time, max_prep_time);
       // world.rank?:printf("\t comm_time: %.3g \t %.3g \t %.3g \n", min_comm_time, avg_comm_time, max_comm_time);
-      world.rank?:printf("%d;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g\r\n", i, total_time, min_work_time, avg_work_time, max_work_time,
+      world.rank?:printf("%d;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g;%.3g;%lu\r\n", i, total_time, min_work_time, avg_work_time, max_work_time,
                                                                                                     min_prep_time, avg_prep_time, max_prep_time,
-                                                                                                    min_comm_time, avg_comm_time, max_comm_time);
+                                                                                                    min_comm_time, avg_comm_time, max_comm_time,
+                                                                                                    mem());
 
     //end exact timing
   }
@@ -254,9 +260,9 @@ int main(int argc, String *argv){
 
   /*****************
    * mathematical error:*/
-  /*global_bodies = new_bodies(world.rank?0:world.size * n);
+  global_bodies = new_bodies(world.rank?0:world.size * n);
   calc_error();
-  del_bodies(global_bodies);*/
+  del_bodies(global_bodies);
 
   deleteCluster(c);
   del_bodies(my_bs);

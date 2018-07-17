@@ -58,3 +58,7 @@ void ap_nfree(void *ptr, size_t size){
     bytes_alloced -= size;
     free(ptr);
 }
+
+size_t mem(){
+    return max_alloced;
+}

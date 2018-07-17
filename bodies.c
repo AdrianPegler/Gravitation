@@ -9,7 +9,7 @@ bodies* new_bodies(int n) {
   bodies *b;
 
   // Allocate memory for the struct.
-  b = (bodies*) ap_malloc(sizeof(bodies), 64);
+  b = (bodies*) ap_nmalloc(sizeof(bodies));
 
   // Set number of bodies.
   b->n = n;
@@ -56,7 +56,7 @@ void del_bodies(bodies *b) {
   ap_free(b->Fy, b->n * sizeof(double));
   ap_free(b->Fz, b->n * sizeof(double));
   ap_free(b->m,  b->n * sizeof(double));
-  free(b);
+  ap_nfree(b, sizeof(bodies));
 }
 
 /************************************************************
