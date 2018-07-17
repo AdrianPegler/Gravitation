@@ -254,9 +254,9 @@ int main(int argc, String *argv){
 
   /*****************
    * mathematical error:*/
-  global_bodies = new_bodies(world.rank?0:world.size * n);
+  /*global_bodies = new_bodies(world.rank?0:world.size * n);
   calc_error();
-  del_bodies(global_bodies);
+  del_bodies(global_bodies);*/
 
   deleteCluster(c);
   del_bodies(my_bs);
