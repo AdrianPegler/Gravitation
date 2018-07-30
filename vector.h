@@ -1,6 +1,8 @@
 #ifndef VECTOR_H__
 #define VECTOR_H__
 
+#include "math_helper.h"
+
 typedef struct vector_ {
     void** data;
     int size;

@@ -9,7 +9,7 @@ void vector_init(vector *v)
     v->data = NULL;
     v->size = 0;
     v->count = 0;
-    //calloc(v->size, sizeof(void*));
+    //ap_calloc(v->size, sizeof(void*));
 }
 
 int vector_count(vector *v)
@@ -21,14 +21,14 @@ void vector_add(vector *v, void *e)
 {
     if (v->size == 0) {
         v->size = 10;
-        v->data = calloc(v->size, sizeof(void*));
+        v->data = ap_calloc(v->size, sizeof(void*));
         //v->data = malloc(sizeof(void*) * v->size);
         //memset(v->data, '\0', sizeof(void*) * v->size);
     }
 
     if (v->size == v->count) {
         v->size *= 2;
-        v->data = realloc(v->data, sizeof(void*) * v->size);
+        v->data = ap_realloc(v->data, sizeof(void*) * v->size, v->size / 2 * sizeof(void*));
     }
 
     v->data[v->count] = e;
@@ -79,5 +79,5 @@ void vector_delete(vector *v, int index)
 
 void vector_free(vector *v)
 {
-    free(v->data);
+    ap_nfree(v->data, sizeof(void*) * v->size);
 }

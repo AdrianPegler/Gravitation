@@ -9,7 +9,7 @@ bodies* new_bodies(int n) {
   bodies *b;
 
   // Allocate memory for the struct.
-  b = (bodies*) malloc(sizeof(bodies));
+  b = (bodies*) ap_nmalloc(sizeof(bodies));
 
   // Set number of bodies.
   b->n = n;
@@ -17,25 +17,25 @@ bodies* new_bodies(int n) {
 
   n = n?n:1;
 
-  b->id = (int*) _mm_malloc(n * sizeof(int), 64);
+  b->id = (int*) ap_malloc(n * sizeof(int), 64);
 
   // Allocate aligned memory for the positions of the masses.
-  b->x = (double*) _mm_malloc(n * sizeof(double), 64);
-  b->y = (double*) _mm_malloc(n * sizeof(double), 64);
-  b->z = (double*) _mm_malloc(n * sizeof(double), 64);
+  b->x = (double*) ap_malloc(n * sizeof(double), 64);
+  b->y = (double*) ap_malloc(n * sizeof(double), 64);
+  b->z = (double*) ap_malloc(n * sizeof(double), 64);
 
   // Allocate aligned memory for the velocities of the masses.
-  b->vx = (double*) _mm_malloc(n * sizeof(double), 64);
-  b->vy = (double*) _mm_malloc(n * sizeof(double), 64);
-  b->vz = (double*) _mm_malloc(n * sizeof(double), 64);
+  b->vx = (double*) ap_malloc(n * sizeof(double), 64);
+  b->vy = (double*) ap_malloc(n * sizeof(double), 64);
+  b->vz = (double*) ap_malloc(n * sizeof(double), 64);
 
   // Allocate aligned memory for the Forces of the masses.
-  b->Fx = (double*) _mm_malloc(n * sizeof(double), 64);
-  b->Fy = (double*) _mm_malloc(n * sizeof(double), 64);
-  b->Fz = (double*) _mm_malloc(n * sizeof(double), 64);
+  b->Fx = (double*) ap_malloc(n * sizeof(double), 64);
+  b->Fy = (double*) ap_malloc(n * sizeof(double), 64);
+  b->Fz = (double*) ap_malloc(n * sizeof(double), 64);
 
   // Allocate aligned memory for the masses.
-  b->m = (double*) _mm_malloc(n * sizeof(double), 64);
+  b->m = (double*) ap_malloc(n * sizeof(double), 64);
 
   return b;
 }
@@ -45,18 +45,18 @@ bodies* new_bodies(int n) {
  ***********************************************************/
 
 void del_bodies(bodies *b) {
-  _mm_free(b->id);
-  _mm_free(b->x);
-  _mm_free(b->y);
-  _mm_free(b->z);
-  _mm_free(b->vx);
-  _mm_free(b->vy);
-  _mm_free(b->vz);
-  _mm_free(b->Fx);
-  _mm_free(b->Fy);
-  _mm_free(b->Fz);
-  _mm_free(b->m);
-  free(b);
+  ap_free(b->id, b->n * sizeof(int));
+  ap_free(b->x,  b->n * sizeof(double));
+  ap_free(b->y,  b->n * sizeof(double));
+  ap_free(b->z,  b->n * sizeof(double));
+  ap_free(b->vx, b->n * sizeof(double));
+  ap_free(b->vy, b->n * sizeof(double));
+  ap_free(b->vz, b->n * sizeof(double));
+  ap_free(b->Fx, b->n * sizeof(double));
+  ap_free(b->Fy, b->n * sizeof(double));
+  ap_free(b->Fz, b->n * sizeof(double));
+  ap_free(b->m,  b->n * sizeof(double));
+  ap_nfree(b, sizeof(bodies));
 }
 
 /************************************************************
